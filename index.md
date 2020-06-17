@@ -1,5 +1,3 @@
-## FromKeith - Thoughts and random ideas
-
-### Posts
+# Posts
 
 * [Ideas](ideas)
