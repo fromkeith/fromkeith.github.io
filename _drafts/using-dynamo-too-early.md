@@ -7,10 +7,12 @@ categories: mistakes
 ## Starting out
 When I first started my company over 5 years ago I was a much more nieve engineer. I took the opportunity and thrill of
 learning new tech over the practically of finding what was the best fit. I mean, for the first time ever I got to pick
-every tech aspect! Golang was new, lets try that! Mysql is old and boring, NoSQL is the new cool! Not the best decision
-criteria. I still got it all to work and launch... but it wasn't the smoothest ride.
+every tech aspect! Golang was new, lets try that! Mysql is old and boring, NoSQL is the new cool! That's what being your own
+boss is all about!
 
-Of all those mistakes, choosing DynamoDB as my sole database is one I regret. It wans't the end of the world mind you.
+While fun, that attitude did not lead to the best decision criteria. I still got a product up, running and usable single-handedly... but it wasn't the smoothest ride.
+
+Of all those mistakes, choosing DynamoDB as my sole database is one I regret. It wasn't the end of the world mind you.
 I can just imagine my life being a bit easier is all.
 
 To start, at the time, I didn't feel like my decision making was equivalent to throwing darts against the wall. I had justifications
@@ -22,27 +24,30 @@ to back up my decision:
 * its was much cheaper than paying the RDS monthly fee
 * i didn't have to worry about confusing firewalls, vpcs, or managing user accounts
 
-Overall DynamoDB felt like it would minimize my time on the boring (to me) managment side. Freeing me up for the fun coding!
-Initially, I was correct. For my local development work, it was just fine. I could build out features easily and focus on
-what the product needed.
+Overall DynamoDB felt like it would minimize my time on the boring (to me) dev ops side. Freeing me up for the fun coding!
+Initially, I was correct. For my local development work, it was perfect. I could build out features easily and focus on
+what the product needed to do.
 
-## Release Tiem
-Then it came time to release. My experience at Amazon told me I needed to run automated load tests. So I pulled out JMeter and
-setup some basic tests. And for the first minute (or less) it worked. Then the 500s started. I pulled up the logs, and yep. It
-was the database failing. DynamoDB had started throttling because my provisioned readers/writers were too low. So that needed
-to be fixed.
+## Release Time
+Then it came time to release. My experience at Amazon told me I needed to run automated load tests. So I pulled out [JMeter](https://jmeter.apache.org/) and
+setup some basic tests. For the first minute (or less) it worked. Then the 500s started. I pulled up the logs, and yep. It
+was the database failing. DynamoDB had started throttling because my provisioned readers/writers were too low.
 
-This was before 2017. AWS did not have AutoScaling. It did not have OnDemand. Only whatever you told it to provision did it provision.
+So that needed to be fixed! But this was before 2017. DynamoDB did not have AutoScaling. It did not have OnDemand. Only whatever you told it to provision did it provision.
 
 If I remember correctly, my first approach was to look at the "Consumed Capacity" returned by DynamoDB. I would then try to
 merge those together across calls on the same webserver and try to scale up if I hit the threshold. This seems pretty straight
-forward. However, I quickily abandoned it. 1) Consumed Capacity documentation was confusing as hell. 2) If I ever wanted
-more than 1 webserver this method would not work. 3) Someone has got to have run into this before.
+forward. However, I quickily abandoned it.
+
+1. Consumed Capacity documentation was confusing, and it only told me after I did something what the cost was.
+2. If I ever wanted more than one webserver this method would not work.
+3. Someone has got to have run into this before. I can't be the only one.
 
 ## Auto Sacling
 
-After some quick research I managed to find DynamicDynamoDB. A python project focused specifically on scaling DynamoDB, with some great testimonails on it saving money and doing wonder. I set it
-up, get it working. Then went back to my load tests. Steady... Boom, 500s. Turns out DynamicDynamoDB was waiting for the 5 minute
+After some quick research I managed to find [Dynamic DynamoDB](https://github.com/sebdah/dynamic-dynamodb). A python project focused specifically on automatically scaling DynamoDB. The testimonails I could find talked wonders of it keeping costs down for different businesses. So I set it up and got it working.
+
+Then went back to my load tests. Steady... Boom, 500s. Turns out DynamicDynamoDB was waiting for the 5 minute
 threshold before scaling. That felt a bit long to me, so reduce to 1 minute, re-run tests. Steady... Boom, 500s. Mmm. It was scaling
 but it still wasn't fast enough. Faster... but still not fast enough.
 
