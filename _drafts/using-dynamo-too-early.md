@@ -47,18 +47,19 @@ forward. However, I quickily abandoned it.
 
 After some quick research I managed to find [Dynamic DynamoDB](https://github.com/sebdah/dynamic-dynamodb). A python project focused specifically on automatically scaling DynamoDB. The testimonails I could find talked wonders of it keeping costs down for different businesses. So I set it up and got it working.
 
-Then went back to my load tests. Steady... Boom, 500s. Turns out DynamicDynamoDB was waiting for the 5 minute
-threshold before scaling. That felt a bit long to me, so reduce to 1 minute, re-run tests. Steady... Boom, 500s. Mmm. It was scaling
-but it still wasn't fast enough. Faster... but still not fast enough.
+Then went back to my load tests. Steady... Boom, 500s. Turns out Dynamic DynamoDB was waiting for a 5 minute
+threshold before scaling. That felt a bit long to me, so reduced it to 1 minute, re-run tests. Steady... Boom, 500s. Mmm. My server
+logs showed the same error. DynamoDB metrics in Cloudwatch showed the spike, but no scaling. The logs for Dynamic DynamoDB show it
+properly adjusting. So it was scaling. Cloudwatch metrics were just several delayed on provisioned amount. The scaling was also
+happening just a bit too slow
 
-The main problem being that it is super hard to scale from 1 reader to 20 in less than a minute.
-This probably seems pretty obvious. However, I was trying to keep my monthly costs down! I now needed to sit with all my tables,
-that needed to quickily scale, with padded readers/writers. Ones I knew I was not going to use for 90% of the day. I also couldn't
-predict when that 10% of time was during the day. So scheduling was out of the question from the get go.
+I determined the main problem was that scaling from 1 reader to 20 in less than a minute was too much to ask.
+This probably seems pretty obvious. However, I was trying to keep my monthly costs down. I now needed have all my scaling tables sit with padded readers/writers. Ones I knew I was not going to use for 90% of the day, but couldn't predict when in the day they would be used. So scheduling was out of the question from the get go.
 
-## Reflecting
 So for the first few months or years that was the status quo. Dynamic DynamoDB running on it own server (before Docker, before T class instnaces). Tables sitting with extra resources so that if a spike happened there was room for reaction.
 
-For what its worth, the design did scale and I had very few problems outside of the scaling issue. When AWS announced AutoSacling in 2017 I gave it a try. However, it was extremely slow. Useless slow. I can see how it would work if I had predicatable useage and high steady volume. However dealing with spikes in traffic it could not help. On Demand that was announced late 2018 was useful, but only for those small tables that rarely see any steady traffic. It also helped keep my staging/developement environment costs down.
+## Reflecting
 
-If I were to go back to that initial decision, I probably would have stuck everything into an RDS MySQL. It would have saved some early personal cash and some unessary hurdles. But thats easy to say now, who knows what problems I would have encountered if I changed the past.
+For what its worth, the design did scale and I had very few problems** outside of the scaling issue. When AWS announced AutoSacling in 2017 I gave it a try. However, it was extremely slow. Useless slow. I can see how it would work if I had predicatable useage and a high steady volume. However, when dealing with spiky traffic it was not up to the task. On Demand for DynamoDB was announced late 2018 and was useful. However, I mainly took advantage of it for those small tables that rarely see any steady traffic. It also helped keep my staging/developement environment costs down.
+
+If I were to go back to that initial decision, I probably would have stuck everything into an RDS MySQL. It would have saved some early personal cash and some unessary hurdles. But thats easy to say now, who knows what problems I would have encountered if I changed the past. I may have had more downtime when trying to scale to larger loads of traffic.
